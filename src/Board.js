@@ -11,7 +11,7 @@ export default class Board extends React.Component {
     this.state = {
       clients: {
         backlog: clients.filter(client => !client.status || client.status === 'backlog'),
-        inProgress: clients.filter(client => client.status && client.status === 'in-progress'),
+        inProgress: clients.filter(client => client.status && client.status === 'inProgress'),
         complete: clients.filter(client => client.status && client.status === 'complete'),
       }
     }
@@ -21,13 +21,54 @@ export default class Board extends React.Component {
       complete: React.createRef(),
     }
   }
+
+  componentDidMount() {
+    this.initializeDragula();
+  }
+
+  initializeDragula() {
+    const containers = Object.values(this.swimlanes).map(ref => ref.current);
+  
+    const drake = Dragula(containers);
+  
+    drake.on('over', (el, container, source, target) => {
+      const closestWithDataStatus = el.closest('[data-status]');
+
+      const swimlaneStatus = closestWithDataStatus ? closestWithDataStatus.dataset.status : null;
+  
+      if (swimlaneStatus) {
+        const clientId = el.dataset.id;
+  
+        this.setState(prevState => {
+          let updatedClients = { ...prevState.clients };
+
+          const target = updatedClients[swimlaneStatus];
+
+          let index = -1
+
+          for (let i = 0; i < target.length; i++) {
+            if (target[i].id === clientId) {
+              index = i;
+              break;
+            }
+          }
+          if (index !== -1) {
+            updatedClients[swimlaneStatus][index].status = swimlaneStatus;
+          }
+          return { clients: updatedClients };
+        });
+      }
+    });
+  }
+
+
   getClients() {
     return [
-      ['1','Stark, White and Abbott','Cloned Optimal Architecture', 'in-progress'],
+      ['1','Stark, White and Abbott','Cloned Optimal Architecture', 'inProgress'],
       ['2','Wiza LLC','Exclusive Bandwidth-Monitored Implementation', 'complete'],
       ['3','Nolan LLC','Vision-Oriented 4Thgeneration Graphicaluserinterface', 'backlog'],
-      ['4','Thompson PLC','Streamlined Regional Knowledgeuser', 'in-progress'],
-      ['5','Walker-Williamson','Team-Oriented 6Thgeneration Matrix', 'in-progress'],
+      ['4','Thompson PLC','Streamlined Regional Knowledgeuser', 'inProgress'],
+      ['5','Walker-Williamson','Team-Oriented 6Thgeneration Matrix', 'inProgress'],
       ['6','Boehm and Sons','Automated Systematic Paradigm', 'backlog'],
       ['7','Runolfsson, Hegmann and Block','Integrated Transitional Strategy', 'backlog'],
       ['8','Schumm-Labadie','Operative Heuristic Challenge', 'backlog'],
@@ -37,8 +78,8 @@ export default class Board extends React.Component {
       ['12','Emard, Champlin and Runolfsdottir','Devolved Needs-Based Capability', 'backlog'],
       ['13','Fritsch, Cronin and Wolff','Open-Source 3Rdgeneration Website', 'complete'],
       ['14','Borer LLC','Profit-Focused Incremental Orchestration', 'backlog'],
-      ['15','Emmerich-Ankunding','User-Centric Stable Extranet', 'in-progress'],
-      ['16','Willms-Abbott','Progressive Bandwidth-Monitored Access', 'in-progress'],
+      ['15','Emmerich-Ankunding','User-Centric Stable Extranet', 'inProgress'],
+      ['16','Willms-Abbott','Progressive Bandwidth-Monitored Access', 'inProgress'],
       ['17','Brekke PLC','Intuitive User-Facing Customerloyalty', 'complete'],
       ['18','Bins, Toy and Klocko','Integrated Assymetric Software', 'backlog'],
       ['19','Hodkiewicz-Hayes','Programmable Systematic Securedline', 'backlog'],
@@ -51,9 +92,22 @@ export default class Board extends React.Component {
     }));
   }
   renderSwimlane(name, clients, ref) {
+    const color = this.getColorForSwimlane(name);
     return (
-      <Swimlane name={name} clients={clients} dragulaRef={ref}/>
+      <Swimlane name={name} clients={clients} dragulaRef={ref} color={color} />
     );
+  }
+  getColorForSwimlane(name) {
+    switch (name.toLowerCase()) {
+      case 'backlog':
+        return 'grey';
+      case 'in progress':
+        return 'blue';
+      case 'complete':
+        return 'green';
+      default:
+        return '';
+    }
   }
 
   render() {

@@ -6,7 +6,7 @@ export default class Card extends React.Component {
     let className = ['Card'];
     if (this.props.status === 'backlog') {
       className.push('Card-grey');
-    } else if (this.props.status === 'in-progress') {
+    } else if (this.props.status === 'inProgress') {
       className.push('Card-blue');
     } else if (this.props.status === 'complete') {
       className.push('Card-green');
